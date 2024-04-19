@@ -153,7 +153,6 @@ def _run_worker():
 
    rank = dist.get_rank()
    world_size = dist.get_world_size()
-   print_rank_0(f"Start running basic DDP example on rank {rank}, world_size: {world_size}.")
 
    # create model and move it to GPU with id rank
    # device_id = rank % torch.cuda.device_count()
@@ -162,7 +161,10 @@ def _run_worker():
    print_rank_0(f"get the model with lora")
    # model = model.to(device_id) # 26364M 显存
    if args.use_dp:
+      print(f"Start running basic DDP example on rank {rank}, world_size: {world_size}.")
       model = DDP(model)
+   if args.use_grad_ckpt:
+      model.base_model.model.model.gradient_checkpointing = True
 
    # loss_fn = nn.MSELoss()
    optimizer = optim.AdamW(model.parameters(), lr=5e-5, eps=1e-4)   
@@ -173,6 +175,7 @@ def _run_worker():
                    batch_size=16, 
                    collate_fn=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True), 
                    sampler=sampler)
+   model.train()
    num_epoch = 1
    log_interval = 10
    scaler = amp.GradScaler()
@@ -181,6 +184,7 @@ def _run_worker():
          sampler.set_epoch(epoch)
       for batch_idx, data in enumerate(dl):
          if args.use_amp:
+            print_rank_0("Use auto mixed precision training.")
             with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=True):
                output = model(**data.to("cuda"))
             scaler.scale(output.loss).backward()
