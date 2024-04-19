@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.distributed as dist
 import torch.multiprocessing as mp
+import torch.cuda.amp as amp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
@@ -14,6 +15,11 @@ from torch.utils.checkpoint import checkpoint_sequential
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, LlamaForCausalLM, DataCollatorForSeq2Seq, TrainingArguments, Trainer
 from peft import LoraConfig, TaskType, get_peft_model
+
+ARG_G = None
+def get_args():
+   global ARG_G
+   return ARG_G
 
 device_map = [
    {
@@ -132,7 +138,7 @@ def lora_config_model():
    global model
    model = get_peft_model(model, config)
    model.enable_input_require_grads() # 开启梯度检查点时，要执行该方法
-   model = model.half()  # 当整个模型都是半精度时，需要将adam_epsilon调大
+   # model = model.half()  # 当整个模型都是半精度时，需要将adam_epsilon调大
    model.print_trainable_parameters()
    return model
 
@@ -143,6 +149,8 @@ def print_rank_0(content):
 def _run_worker():
    dist.init_process_group("nccl")
    get_model()
+   args = get_args()
+
    rank = dist.get_rank()
    world_size = dist.get_world_size()
    print_rank_0(f"Start running basic DDP example on rank {rank}, world_size: {world_size}.")
@@ -153,31 +161,38 @@ def _run_worker():
    model = lora_config_model()
    print_rank_0(f"get the model with lora")
    # model = model.to(device_id) # 26364M 显存
-   ddp_model = DDP(model)
+   if args.use_dp:
+      model = DDP(model)
 
    # loss_fn = nn.MSELoss()
-   optimizer = optim.AdamW(ddp_model.parameters(), lr=5e-5, eps=1e-4)   
+   optimizer = optim.AdamW(model.parameters(), lr=5e-5, eps=1e-4)   
    tokenized_ds = get_dataset()
    ds_6k = tokenized_ds.select(range(6000))
-   sampler = DistributedSampler(ds_6k)
+   sampler = DistributedSampler(ds_6k) if args.use_dp else None
    dl = DataLoader(ds_6k,
                    batch_size=16, 
                    collate_fn=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True), 
                    sampler=sampler)
-   # optimizer.zero_grad()
-   # outputs = ddp_model(torch.randn(20, 10))
-   # labels = torch.randn(20, 5).to(device_id)
-   # loss_fn(outputs, labels).backward()
-   # optimizer.step()
    num_epoch = 1
    log_interval = 10
+   scaler = amp.GradScaler()
    for epoch in range(num_epoch):
-      sampler.set_epoch(epoch)
+      if args.use_dp:
+         sampler.set_epoch(epoch)
       for batch_idx, data in enumerate(dl):
+         if args.use_amp:
+            with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=True):
+               output = model(**data.to("cuda"))
+            scaler.scale(output.loss).backward()
+            # optimizer.step()
+            scaler.step(optimizer)
+            scaler.update()
+         else:
+            output = model(**data.to("cuda"))
+            output.loss.backward()
+            optimizer.step()
+            
          optimizer.zero_grad()
-         output = ddp_model(**data.to("cuda"))
-         output.loss.backward()
-         optimizer.step()
          if batch_idx % log_interval == 0:
                print(f"Step: {batch_idx}\t Training Loss: {output.loss.item()}")
 
@@ -185,5 +200,15 @@ def _run_worker():
 
 
 if __name__ == "__main__":
+   parser = argparse.ArgumentParser(description="""
+                                    A demo for llama fine-tuning with gradient checkpoint, 
+                                    mixed precision, data parallel, tensor parallel.
+                                    """
+                                 ) 
+   parser.add_argument("--use_dp", help="use data parallel", action="store_true")
+   parser.add_argument("--use_tp", help="use tensor parallel", action="store_true")
+   parser.add_argument("--use_amp", help="use mixed precesion", action="store_true")
+   parser.add_argument("--use_grad_ckpt", help="use gradient checkpoint", action="store_true")
+   ARG_G = parser.parse_args()
    _run_worker()
    # torchrun --nnodes=1 --nproc_per_node=2 --master_addr=localhost --master_port=12355 train.py
