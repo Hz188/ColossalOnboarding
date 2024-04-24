@@ -178,14 +178,14 @@ def print_rank_0(content):
 
 
 def tensor_parallelize_model():
-    model 
+    model
+
 
 def _run_worker():
     dist.init_process_group("nccl")
     # dp_pg = dist.new_group([0, 4])
     # sub_pg = dist.new_subgroups(group_size=2)
     args = get_args()
-    
 
     rank = dist.get_rank()
     world_size = dist.get_world_size()
@@ -203,11 +203,12 @@ def _run_worker():
             print_rank_0("Use gradient checkpoint.")
             model.base_model.model.model.gradient_checkpointing = True
         if args.use_tp:
-            model = tensor_parallelize_model()
+            print_rank_0("Use tensor parallel.")
+            # model.config.pretraining_tp = 4
+            model.base_model.model.model.pretraining_tp = 4
         if args.use_dp:
             print_rank_0("Use distributed data parallel.")
             model = DDP(model, process_group=dist.new_group([0, 1]))
-
 
         # loss_fn = nn.MSELoss()
         optimizer = optim.AdamW(model.parameters(), lr=5e-5, eps=1e-4)
