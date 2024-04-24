@@ -178,20 +178,19 @@ def print_rank_0(content):
 
 
 def tensor_parallelize_model():
-    pass
-
+    model 
 
 def _run_worker():
     dist.init_process_group("nccl")
     # dp_pg = dist.new_group([0, 4])
     # sub_pg = dist.new_subgroups(group_size=2)
     args = get_args()
+    
 
     rank = dist.get_rank()
     world_size = dist.get_world_size()
     if rank == 0 or rank == 1:
         get_model()
-        tensor_parallelize_model()
         # create model and move it to GPU with id rank
         # device_id = rank % torch.cuda.device_count()
         print_rank_0(f"Move model from cpu to gpu.")
@@ -203,10 +202,12 @@ def _run_worker():
         if args.use_grad_ckpt:
             print_rank_0("Use gradient checkpoint.")
             model.base_model.model.model.gradient_checkpointing = True
-
+        if args.use_tp:
+            model = tensor_parallelize_model()
         if args.use_dp:
             print_rank_0("Use distributed data parallel.")
             model = DDP(model, process_group=dist.new_group([0, 1]))
+
 
         # loss_fn = nn.MSELoss()
         optimizer = optim.AdamW(model.parameters(), lr=5e-5, eps=1e-4)
