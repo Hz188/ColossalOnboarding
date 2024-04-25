@@ -3,6 +3,7 @@ import argparse
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 import torch.distributed as dist
 import torch.multiprocessing as mp
@@ -23,7 +24,11 @@ from transformers import (
 )
 from peft import LoraConfig, TaskType, get_peft_model
 
+from layers import ColumnParallelLinear, RowParallelLinear, ParallelMLP
+import common
+
 ARG_G = None
+common._init()
 
 
 def get_args():
@@ -118,17 +123,18 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 tokenizer.pad_token_id = 2
 tokenizer.padding_side = "right"
-model = None
 
 
 def get_model():
-    global model
     rank = dist.get_rank()
     model = LlamaForCausalLM.from_pretrained(
         "/home/genghaozhe/workspace/huggingface-models/meta-llama/Llama-2-7b-hf",
         low_cpu_mem_usage=True,
-        device_map=device_map[rank],
+        # device_map=device_map[rank],
+        # device_map=rank,
+        device_map="cpu",
     )
+    return model
 
 
 def process_func(example):
@@ -162,9 +168,9 @@ def get_dataset():
     return tokenized_ds
 
 
-def lora_config_model():
+def lora_config_model(model):
+    print_rank_0(f"get the model with lora")
     config = LoraConfig(task_type=TaskType.CAUSAL_LM)
-    global model
     model = get_peft_model(model, config)
     model.enable_input_require_grads()  # 开启梯度检查点时，要执行该方法
     # model = model.half()  # 当整个模型都是半精度时，需要将adam_epsilon调大
@@ -177,8 +183,103 @@ def print_rank_0(content):
         print(content)
 
 
-def tensor_parallelize_model():
-    model
+def initialize_parallel_group():
+    G_DATA_PARALLEL = dist.new_group([0, 1])
+    rank = dist.get_rank()
+    world_size = dist.get_world_size()
+    tensor_parallel_size = 2
+    for i in range(2):
+        # i = 0, 1
+        ranks = range(i, world_size, 2)
+        # print_rank_0(list(ranks))
+        group = dist.new_group(ranks)
+        if rank in ranks:
+            common.set_val("G_TENSOR_PARALLEL_GROUP", group)
+            common.set_val("G_TENSOR_PARALLEL_GROUP_WORLD_SIZE", 2)
+            G_TENSOR_PARALLEL_GROUP = group
+            G_TENSOR_PARALLEL_GROUP_WORLD_SIZE = 2
+
+
+def test_parallel():
+    torch.manual_seed(42)
+    inp = torch.rand(1, 2)
+
+    linear1 = nn.Linear(2, 4, bias=False)
+    linear3 = nn.Linear(2, 4, bias=False)
+    linear2 = nn.Linear(4, 2, bias=False)
+    with torch.no_grad():
+        linear1.weight.fill_(1.0)
+        linear2.weight.fill_(1.0)
+        linear3.weight.fill_(1.0)
+    # serial_mlp = nn.Sequential(linear1, linear2)
+    # serial_out = serial_mlp(inp)
+    serial_out = linear2(linear1(inp) * linear3(inp))
+
+    p_linear1 = ColumnParallelLinear(
+        2, 4, bias=False, gather_output=False, init_data=linear1.weight.data
+    ).to("cuda")
+    p_linear3 = ColumnParallelLinear(
+        2, 4, bias=False, gather_output=False, init_data=linear3.weight.data
+    ).to("cuda")
+    p_linear2 = RowParallelLinear(
+        4, 2, bias=False, input_is_parallel=True, init_data=linear2.weight.data
+    ).to("cuda")
+    rank = dist.get_rank()
+    # parallel_mlp = nn.Sequential(p_linear1, p_linear2).to("cuda")
+    # parallel_out = parallel_mlp(inp.to("cuda"))
+    parallel_out = p_linear2(p_linear1(inp.to("cuda")) * p_linear3(inp.to("cuda")))
+
+    print_rank_0(
+        f"rank: {dist.get_rank()}\nparallel output: {parallel_out}\nserial output: {serial_out}"
+    )
+
+
+def test_mlp(layers):
+    torch.manual_seed(42)
+    inp = torch.rand(1, 4096)
+    mlp = layers[0].mlp
+    print_rank_0(mlp)
+    gate_proj = mlp.gate_proj
+    up_proj = mlp.up_proj
+    down_proj = mlp.down_proj
+    mlp_out = mlp.to("cuda")(inp.to("cuda"))
+
+    # gate_proj_p = ColumnParallelLinear(
+    #     4096, 11008, bias=False, gather_output=False, init_data=gate_proj.weight.data
+    # ).to("cuda")
+    # up_proj_p = ColumnParallelLinear(
+    #     4096, 11008, bias=False, gather_output=False, init_data=up_proj.weight.data
+    # ).to("cuda")
+    # down_proj_p = RowParallelLinear(
+    #     11008,
+    #     4096,
+    #     bias=False,
+    #     input_is_parallel=True,
+    #     init_data=down_proj.weight.data,
+    # ).to("cuda")
+    # out = F.silu(gate_proj_p(inp.to("cuda")))
+    # out = up_proj_p(inp.to("cuda")) * out
+    # parallel_out = down_proj_p(out)
+
+    parallel_mlp = ParallelMLP(4096, 11008, mlp).to("cuda")
+    parallel_out = parallel_mlp(inp.to("cuda"))
+
+    print_rank_0(f"mlp out: {mlp_out.sum()}, parallel out: {parallel_out.sum()}")
+    print_rank_0(f'diff: {(mlp_out.to("cuda") - parallel_out).sum()}')
+
+
+def convert_attn(layers):
+    self_attn = layers[0].self_attn
+    # print_rank_0(self_attn)
+
+
+def tensor_parallelize_model(model):
+    initialize_parallel_group()
+    decoder_layers = model.model.layers  # ModuleList[ (self_attn, mlp) * 32]
+    # test_parallel()
+    test_mlp(decoder_layers)
+    # convert_attn(decoder_layers)
+    return model
 
 
 def _run_worker():
@@ -186,26 +287,26 @@ def _run_worker():
     # dp_pg = dist.new_group([0, 4])
     # sub_pg = dist.new_subgroups(group_size=2)
     args = get_args()
-
     rank = dist.get_rank()
+    torch.cuda.set_device(rank)
     world_size = dist.get_world_size()
-    if rank == 0 or rank == 1:
-        get_model()
-        # create model and move it to GPU with id rank
-        # device_id = rank % torch.cuda.device_count()
-        print_rank_0(f"Move model from cpu to gpu.")
-        model = lora_config_model()
-        print_rank_0(f"get the model with lora")
-        # model = model.to(device_id) # 26364M 显存
+
+    if rank in (0, 1, 2, 3):
+        model = get_model()
+        # model = None
+        if args.use_tp:
+            print_rank_0("Use tensor parallel.")
+            model = tensor_parallelize_model(model)
+
+        return
+        model = lora_config_model(model)
+
         if args.use_amp:
             print_rank_0("Use auto mixed precision training.")
         if args.use_grad_ckpt:
             print_rank_0("Use gradient checkpoint.")
             model.base_model.model.model.gradient_checkpointing = True
-        if args.use_tp:
-            print_rank_0("Use tensor parallel.")
-            # model.config.pretraining_tp = 4
-            model.base_model.model.model.pretraining_tp = 4
+
         if args.use_dp:
             print_rank_0("Use distributed data parallel.")
             model = DDP(model, process_group=dist.new_group([0, 1]))
@@ -213,8 +314,8 @@ def _run_worker():
         # loss_fn = nn.MSELoss()
         optimizer = optim.AdamW(model.parameters(), lr=5e-5, eps=1e-4)
         tokenized_ds = get_dataset()
-        ds_6k = tokenized_ds.select(range(3000))
-        # ds_6k = tokenized_ds.select(range(32)) # for debug
+        # ds_6k = tokenized_ds.select(range(3000))
+        ds_6k = tokenized_ds.select(range(32))  # for debug
         sampler = DistributedSampler(ds_6k, num_replicas=2) if args.use_dp else None
         dl = DataLoader(
             ds_6k,
@@ -224,7 +325,7 @@ def _run_worker():
         )
         model.train()
         num_epoch = 1
-        log_interval = 10
+        log_interval = 1
         scaler = amp.GradScaler()
         for epoch in range(num_epoch):
             if args.use_dp:
@@ -234,7 +335,7 @@ def _run_worker():
                     with torch.autocast(
                         device_type="cuda", dtype=torch.float16, enabled=True
                     ):
-                        output = model(**data.to("cuda"))
+                        output = model(**data.to(f"cuda:{rank}"))
                     scaler.scale(output.loss).backward()
                     # optimizer.step()
                     scaler.step(optimizer)
