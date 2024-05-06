@@ -185,13 +185,14 @@ def print_rank_0(content):
 
 def initialize_parallel_group():
     G_DATA_PARALLEL = dist.new_group([0, 1])
+    common.set_val("G_DATA_PARALLEL", G_DATA_PARALLEL)
     rank = dist.get_rank()
     world_size = dist.get_world_size()
     tensor_parallel_size = 2
     for i in range(2):
         # i = 0, 1
         ranks = range(i, world_size, 2)
-        # print_rank_0(list(ranks))
+        print_rank_0(list(ranks))
         group = dist.new_group(ranks)
         if rank in ranks:
             common.set_val("G_TENSOR_PARALLEL_GROUP", group)
@@ -268,17 +269,32 @@ def test_mlp(layers):
     print_rank_0(f'diff: {(mlp_out.to("cuda") - parallel_out).sum()}')
 
 
+def convert_mlp(layers):
+    for l in layers:
+        l.mlp = ParallelMLP(4096, 11008, l.mlp)  # .to("cuda")
+
+
+def test_attn(layers):
+    torch.manual_seed(42)
+    inp = torch.rand(1, 4096)
+    attn = layers[0].self_attn
+    print_rank_0(attn)
+
+
 def convert_attn(layers):
     self_attn = layers[0].self_attn
-    # print_rank_0(self_attn)
+    print_rank_0(self_attn)
 
 
 def tensor_parallelize_model(model):
     initialize_parallel_group()
     decoder_layers = model.model.layers  # ModuleList[ (self_attn, mlp) * 32]
     # test_parallel()
-    test_mlp(decoder_layers)
+    # test_mlp(decoder_layers)
+    convert_mlp(decoder_layers)
+    # test_attn(decoder_layers)
     # convert_attn(decoder_layers)
+    # print_rank_0(model)
     return model
 
 
@@ -290,26 +306,35 @@ def _run_worker():
     rank = dist.get_rank()
     torch.cuda.set_device(rank)
     world_size = dist.get_world_size()
+    if rank in (2, 3):
+        model = get_model()
+        if args.use_tp:
+            print_rank_0("Use tensor parallel.")
+            model = tensor_parallelize_model(model)
 
-    if rank in (0, 1, 2, 3):
+    if rank in (0, 1):
         model = get_model()
         # model = None
         if args.use_tp:
             print_rank_0("Use tensor parallel.")
             model = tensor_parallelize_model(model)
 
-        return
-        model = lora_config_model(model)
+        # return
+        model = lora_config_model(model).to("cuda")
 
         if args.use_amp:
             print_rank_0("Use auto mixed precision training.")
+
         if args.use_grad_ckpt:
+            # model.base_model.model.model.gradient_checkpointing = True
+            model.base_model.model.gradient_checkpointing_enable()
             print_rank_0("Use gradient checkpoint.")
-            model.base_model.model.model.gradient_checkpointing = True
 
         if args.use_dp:
+            model = DDP(
+                model, process_group=common.get_val("G_DATA_PARALLEL")
+            )  # dist.new_group([0, 1]))
             print_rank_0("Use distributed data parallel.")
-            model = DDP(model, process_group=dist.new_group([0, 1]))
 
         # loss_fn = nn.MSELoss()
         optimizer = optim.AdamW(model.parameters(), lr=5e-5, eps=1e-4)
@@ -323,11 +348,13 @@ def _run_worker():
             collate_fn=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
             sampler=sampler,
         )
+        print_rank_0(f"get the dataloader")
         model.train()
         num_epoch = 1
         log_interval = 1
         scaler = amp.GradScaler()
         for epoch in range(num_epoch):
+            print_rank_0(f"start train")
             if args.use_dp:
                 sampler.set_epoch(epoch)
             for batch_idx, data in enumerate(dl):
@@ -335,7 +362,9 @@ def _run_worker():
                     with torch.autocast(
                         device_type="cuda", dtype=torch.float16, enabled=True
                     ):
+                        print_rank_0(f"FWD 111")
                         output = model(**data.to(f"cuda:{rank}"))
+                        print_rank_0(f"FWD 222")
                     scaler.scale(output.loss).backward()
                     # optimizer.step()
                     scaler.step(optimizer)
@@ -371,3 +400,4 @@ if __name__ == "__main__":
     _run_worker()
     # torchrun --standalone  --nnodes=1 --nproc_per_node=2  train.py --use_dp --use_amp --use_grad_ckpt
     # torchrun --standalone  --nnodes=1 --nproc_per_node=2  train.py --use_dp --use_amp --use_grad_ckpt --use_tp
+    # torchrun --standalone  --nnodes=1 --nproc_per_node=4  train.py --use_dp --use_grad_ckpt --use_amp --use_tp > train.log 2>&1
