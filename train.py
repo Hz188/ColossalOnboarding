@@ -261,6 +261,7 @@ def _run_worker():
         print_rank_0("====================Use gradient checkpoint====================")
 
     if args.use_dp:
+        # print(   dist.get_group_rank(common.get_val("G_DATA_PARALLEL_GROUP"), dist.get_rank() ) )
         model = DDP(model, process_group=common.get_val("G_DATA_PARALLEL_GROUP"))
         print_rank_0(
             "====================Use distributed data parallel===================="
@@ -272,7 +273,17 @@ def _run_worker():
     ds_6k = tokenized_ds.select(range(6000))
     # ds_6k = tokenized_ds.select(range(64))  # for debug
     # sampler = DistributedSampler(ds_6k, num_replicas=2) if args.use_dp else None
-    sampler = DistributedSampler(ds_6k, num_replicas=4) if args.use_dp else None
+    sampler = (
+        DistributedSampler(
+            ds_6k,
+            rank=dist.get_group_rank(
+                common.get_val("G_DATA_PARALLEL_GROUP"), dist.get_rank()
+            ),
+            num_replicas=2,
+        )
+        if args.use_dp
+        else None
+    )
     dl = DataLoader(
         ds_6k,
         batch_size=16,

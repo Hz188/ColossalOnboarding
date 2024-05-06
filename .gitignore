@@ -3,3 +3,4 @@ __pycache__/
 chatbot/
 demo/
 *.log
+.vscode/
