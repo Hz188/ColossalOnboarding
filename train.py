@@ -85,6 +85,7 @@ def process_func(example):
 
 
 def get_dataset():
+    print_rank_0(f"====================get the dataset====================")
     ds = load_dataset("shibing624/alpaca-zh", split="train")
     tokenized_ds = ds.map(process_func, remove_columns=ds.column_names)
     return tokenized_ds
@@ -96,7 +97,8 @@ def lora_config_model(model):
     model = get_peft_model(model, config)
     model.enable_input_require_grads()  # 开启梯度检查点时，要执行该方法
     # model = model.half()  # 当整个模型都是半精度时，需要将adam_epsilon调大
-    model.print_trainable_parameters()
+    if dist.get_rank() == 0:
+        model.print_trainable_parameters()
     return model
 
 
@@ -105,7 +107,14 @@ def print_rank_0(content):
         print(content)
 
 
+def print_t(content):
+    print(f"rank: {dist.get_rank()}\t{content}")
+
+
 def initialize_parallel_group():
+    print_rank_0(
+        f"====================initialize the distributed env===================="
+    )
     rank = dist.get_rank()  # 0, 1, 2, 3
     world_size = dist.get_world_size()
     for i in range(2):
@@ -135,75 +144,10 @@ def initialize_parallel_group():
             G_TENSOR_PARALLEL_GROUP_WORLD_SIZE = 2
 
 
-def test_parallel():
-    torch.manual_seed(42)
-    inp = torch.rand(1, 2)
-
-    linear1 = nn.Linear(2, 4, bias=False)
-    linear3 = nn.Linear(2, 4, bias=False)
-    linear2 = nn.Linear(4, 2, bias=False)
-    with torch.no_grad():
-        linear1.weight.fill_(1.0)
-        linear2.weight.fill_(1.0)
-        linear3.weight.fill_(1.0)
-    # serial_mlp = nn.Sequential(linear1, linear2)
-    # serial_out = serial_mlp(inp)
-    serial_out = linear2(linear1(inp) * linear3(inp))
-
-    p_linear1 = ColumnParallelLinear(
-        2, 4, bias=False, gather_output=False, init_data=linear1.weight.data
-    ).to("cuda")
-    p_linear3 = ColumnParallelLinear(
-        2, 4, bias=False, gather_output=False, init_data=linear3.weight.data
-    ).to("cuda")
-    p_linear2 = RowParallelLinear(
-        4, 2, bias=False, input_is_parallel=True, init_data=linear2.weight.data
-    ).to("cuda")
-    rank = dist.get_rank()
-    # parallel_mlp = nn.Sequential(p_linear1, p_linear2).to("cuda")
-    # parallel_out = parallel_mlp(inp.to("cuda"))
-    parallel_out = p_linear2(p_linear1(inp.to("cuda")) * p_linear3(inp.to("cuda")))
-
-    print_rank_0(
-        f"rank: {dist.get_rank()}\nparallel output: {parallel_out}\nserial output: {serial_out}"
-    )
-
-
-def test_mlp(layers):
-    torch.manual_seed(42)
-    inp = torch.rand(1, 4096)
-    mlp = layers[0].mlp
-    print_rank_0(mlp)
-    gate_proj = mlp.gate_proj
-    up_proj = mlp.up_proj
-    down_proj = mlp.down_proj
-    mlp_out = mlp.to("cuda")(inp.to("cuda"))
-
-    # gate_proj_p = ColumnParallelLinear(
-    #     4096, 11008, bias=False, gather_output=False, init_data=gate_proj.weight.data
-    # ).to("cuda")
-    # up_proj_p = ColumnParallelLinear(
-    #     4096, 11008, bias=False, gather_output=False, init_data=up_proj.weight.data
-    # ).to("cuda")
-    # down_proj_p = RowParallelLinear(
-    #     11008,
-    #     4096,
-    #     bias=False,
-    #     input_is_parallel=True,
-    #     init_data=down_proj.weight.data,
-    # ).to("cuda")
-    # out = F.silu(gate_proj_p(inp.to("cuda")))
-    # out = up_proj_p(inp.to("cuda")) * out
-    # parallel_out = down_proj_p(out)
-
-    parallel_mlp = ParallelMLP(4096, 11008, mlp).to("cuda")
-    parallel_out = parallel_mlp(inp.to("cuda"))
-
-    print_rank_0(f"mlp out: {mlp_out.sum()}, parallel out: {parallel_out.sum()}")
-    print_rank_0(f'diff: {(mlp_out.to("cuda") - parallel_out).sum()}')
-
-
 def convert_mlp(layers):
+    print_rank_0(
+        f"====================convert origin mlp to parallel mlp===================="
+    )
     for l in layers:
         l.mlp = ParallelMLP(4096, 11008, l.mlp)
 
@@ -222,27 +166,18 @@ def convert_attn(layers):
 
 def tensor_parallelize_model(model):
     decoder_layers = model.model.layers  # ModuleList[ (self_attn, mlp) * 32]
-    # test_parallel()
-    # test_mlp(decoder_layers)
     convert_mlp(decoder_layers)
-    # test_attn(decoder_layers)
-    # convert_attn(decoder_layers)
-    # print_rank_0(model)
     return model
 
 
 def _run_worker():
     dist.init_process_group("nccl")
-    # dp_pg = dist.new_group([0, 4])
-    # sub_pg = dist.new_subgroups(group_size=2)
     args = get_args()
     rank = dist.get_rank()
     torch.cuda.set_device(rank)
     world_size = dist.get_world_size()
     initialize_parallel_group()
-    # if rank in (0, 1):
     model = get_model()
-    # model = None
     if args.use_tp:
         print_rank_0("====================Use tensor parallel====================")
         model = tensor_parallelize_model(model)
@@ -255,9 +190,11 @@ def _run_worker():
             "====================Use auto mixed precision training===================="
         )
 
+    use_cache = True
     if args.use_grad_ckpt:
         # model.base_model.model.model.gradient_checkpointing = True
         model.base_model.model.gradient_checkpointing_enable()
+        use_cache = False
         print_rank_0("====================Use gradient checkpoint====================")
 
     if args.use_dp:
@@ -273,6 +210,7 @@ def _run_worker():
     ds_6k = tokenized_ds.select(range(6000))
     # ds_6k = tokenized_ds.select(range(64))  # for debug
     # sampler = DistributedSampler(ds_6k, num_replicas=2) if args.use_dp else None
+
     sampler = (
         DistributedSampler(
             ds_6k,
@@ -286,7 +224,7 @@ def _run_worker():
     )
     dl = DataLoader(
         ds_6k,
-        batch_size=16,
+        batch_size=10,
         collate_fn=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
         sampler=sampler,
     )
@@ -304,20 +242,19 @@ def _run_worker():
                 with torch.autocast(
                     device_type="cuda", dtype=torch.float16, enabled=True
                 ):
-                    output = model(**data.to(f"cuda:{rank}"))
+                    output = model(**data.to(f"cuda:{rank}"), use_cache=use_cache)
                 scaler.scale(output.loss).backward()
-                # optimizer.step()
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 output = model(**data.to("cuda"))
                 output.loss.backward()
                 optimizer.step()
-
             optimizer.zero_grad()
-            if batch_idx % log_interval == 0:
+
+            if (batch_idx + 1) % log_interval == 0:
                 print_rank_0(
-                    f"Step: {batch_idx}\t Data: {data['input_ids'].shape}\t Training Loss: {output.loss.item()}"
+                    f"Step: {batch_idx+1}\t Data: {data['input_ids'].shape}\t Training Loss: {output.loss.item()}"
                 )
 
     dist.destroy_process_group()
