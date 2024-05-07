@@ -1,0 +1,325 @@
+[2024-05-07 08:18:38,996] torch.distributed.run: [WARNING] master_addr is only used for static rdzv_backend and when rdzv_endpoint is not specified.
+[2024-05-07 08:18:38,997] torch.distributed.run: [WARNING] 
+[2024-05-07 08:18:38,997] torch.distributed.run: [WARNING] *****************************************
+[2024-05-07 08:18:38,997] torch.distributed.run: [WARNING] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+[2024-05-07 08:18:38,997] torch.distributed.run: [WARNING] *****************************************
+[W socket.cpp:663] [c10d] The client socket has failed to connect to [H100-199]:58453 (errno: 22 - Invalid argument).
+[W socket.cpp:663] [c10d] The client socket has failed to connect to [H100-199]:58453 (errno: 22 - Invalid argument).
+[W socket.cpp:663] [c10d] The client socket has failed to connect to [H100-199]:58453 (errno: 22 - Invalid argument).
+====================initialize the distributed env====================
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:12<00:12, 12.63s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:13<00:13, 13.88s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:14<00:14, 14.06s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:13<00:13, 13.40s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:16<00:00,  7.51s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:16<00:00,  8.28s/it]
+====================Use tensor parallel====================
+====================convert origin mlp to parallel mlp====================
+====================get the model with lora====================
+trainable params: 4,194,304 || all params: 4,578,349,056 || trainable%: 0.09161171305851609
+Loading checkpoint shards: 100%|██████████| 2/2 [00:17<00:00,  8.00s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:17<00:00,  8.88s/it]
+Loading checkpoint shards: 100%|██████████| 2/2 [00:18<00:00,  8.20s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:18<00:00,  9.08s/it]
+Loading checkpoint shards: 100%|██████████| 2/2 [00:17<00:00,  7.88s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:17<00:00,  8.71s/it]
+====================Use distributed data parallel====================
+====================get the dataset====================
+You're using a LlamaTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+====================get the dataloader====================
+====================start train====================
+You're using a LlamaTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+You're using a LlamaTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+You're using a LlamaTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+Step: 1	 Data: torch.Size([10, 384])	 Training Loss: 1.0071995258331299
+Step: 2	 Data: torch.Size([10, 384])	 Training Loss: 1.0460772514343262
+Step: 3	 Data: torch.Size([10, 384])	 Training Loss: 1.1262587308883667
+Step: 4	 Data: torch.Size([10, 384])	 Training Loss: 1.0790143013000488
+Step: 5	 Data: torch.Size([10, 384])	 Training Loss: 1.0097352266311646
+Step: 6	 Data: torch.Size([10, 384])	 Training Loss: 1.1461299657821655
+Step: 7	 Data: torch.Size([10, 384])	 Training Loss: 1.0300664901733398
+Step: 8	 Data: torch.Size([10, 384])	 Training Loss: 1.223107933998108
+Step: 9	 Data: torch.Size([10, 384])	 Training Loss: 1.0862387418746948
+Step: 10	 Data: torch.Size([10, 384])	 Training Loss: 1.0915528535842896
+Step: 11	 Data: torch.Size([10, 384])	 Training Loss: 1.0178449153900146
+Step: 12	 Data: torch.Size([10, 384])	 Training Loss: 1.0547131299972534
+Step: 13	 Data: torch.Size([10, 384])	 Training Loss: 1.0950227975845337
+Step: 14	 Data: torch.Size([10, 384])	 Training Loss: 1.2376807928085327
+Step: 15	 Data: torch.Size([10, 384])	 Training Loss: 1.0422123670578003
+Step: 16	 Data: torch.Size([10, 384])	 Training Loss: 1.1324433088302612
+Step: 17	 Data: torch.Size([10, 384])	 Training Loss: 1.1617270708084106
+Step: 18	 Data: torch.Size([10, 384])	 Training Loss: 1.0621957778930664
+Step: 19	 Data: torch.Size([10, 384])	 Training Loss: 1.2256056070327759
+Step: 20	 Data: torch.Size([10, 384])	 Training Loss: 1.0245827436447144
+Step: 21	 Data: torch.Size([10, 384])	 Training Loss: 1.0358268022537231
+Step: 22	 Data: torch.Size([10, 384])	 Training Loss: 1.0504080057144165
+Step: 23	 Data: torch.Size([10, 384])	 Training Loss: 1.1478809118270874
+Step: 24	 Data: torch.Size([10, 384])	 Training Loss: 1.1765931844711304
+Step: 25	 Data: torch.Size([10, 384])	 Training Loss: 0.987388551235199
+Step: 26	 Data: torch.Size([10, 384])	 Training Loss: 0.9650402665138245
+Step: 27	 Data: torch.Size([10, 384])	 Training Loss: 1.2214444875717163
+Step: 28	 Data: torch.Size([10, 384])	 Training Loss: 1.1181191205978394
+Step: 29	 Data: torch.Size([10, 384])	 Training Loss: 1.1185880899429321
+Step: 30	 Data: torch.Size([10, 384])	 Training Loss: 0.9864500164985657
+Step: 31	 Data: torch.Size([10, 384])	 Training Loss: 1.128058671951294
+Step: 32	 Data: torch.Size([10, 384])	 Training Loss: 1.1259583234786987
+Step: 33	 Data: torch.Size([10, 384])	 Training Loss: 1.0340449810028076
+Step: 34	 Data: torch.Size([10, 384])	 Training Loss: 0.9039957523345947
+Step: 35	 Data: torch.Size([10, 384])	 Training Loss: 1.0442752838134766
+Step: 36	 Data: torch.Size([10, 384])	 Training Loss: 1.0723415613174438
+Step: 37	 Data: torch.Size([10, 384])	 Training Loss: 1.122551679611206
+Step: 38	 Data: torch.Size([10, 384])	 Training Loss: 0.9697990417480469
+Step: 39	 Data: torch.Size([10, 384])	 Training Loss: 1.0176796913146973
+Step: 40	 Data: torch.Size([10, 384])	 Training Loss: 1.041996955871582
+Step: 41	 Data: torch.Size([10, 384])	 Training Loss: 1.1760374307632446
+Step: 42	 Data: torch.Size([10, 384])	 Training Loss: 1.0235745906829834
+Step: 43	 Data: torch.Size([10, 384])	 Training Loss: 1.1060105562210083
+Step: 44	 Data: torch.Size([10, 384])	 Training Loss: 1.2645490169525146
+Step: 45	 Data: torch.Size([10, 384])	 Training Loss: 1.104856252670288
+Step: 46	 Data: torch.Size([10, 384])	 Training Loss: 0.9881908893585205
+Step: 47	 Data: torch.Size([10, 384])	 Training Loss: 0.9909611344337463
+Step: 48	 Data: torch.Size([10, 384])	 Training Loss: 1.2241594791412354
+Step: 49	 Data: torch.Size([10, 384])	 Training Loss: 1.1626513004302979
+Step: 50	 Data: torch.Size([10, 384])	 Training Loss: 1.2310411930084229
+Step: 51	 Data: torch.Size([10, 384])	 Training Loss: 1.0427154302597046
+Step: 52	 Data: torch.Size([10, 384])	 Training Loss: 1.042437195777893
+Step: 53	 Data: torch.Size([10, 384])	 Training Loss: 1.1122980117797852
+Step: 54	 Data: torch.Size([10, 384])	 Training Loss: 1.0930140018463135
+Step: 55	 Data: torch.Size([10, 384])	 Training Loss: 1.0033684968948364
+Step: 56	 Data: torch.Size([10, 384])	 Training Loss: 1.153176188468933
+Step: 57	 Data: torch.Size([10, 384])	 Training Loss: 0.9982694387435913
+Step: 58	 Data: torch.Size([10, 384])	 Training Loss: 0.9433754682540894
+Step: 59	 Data: torch.Size([10, 384])	 Training Loss: 1.1785372495651245
+Step: 60	 Data: torch.Size([10, 384])	 Training Loss: 1.161465048789978
+Step: 61	 Data: torch.Size([10, 384])	 Training Loss: 1.0003269910812378
+Step: 62	 Data: torch.Size([10, 384])	 Training Loss: 1.2405321598052979
+Step: 63	 Data: torch.Size([10, 384])	 Training Loss: 1.110751986503601
+Step: 64	 Data: torch.Size([10, 384])	 Training Loss: 1.0468358993530273
+Step: 65	 Data: torch.Size([10, 384])	 Training Loss: 1.0752571821212769
+Step: 66	 Data: torch.Size([10, 384])	 Training Loss: 1.0690299272537231
+Step: 67	 Data: torch.Size([10, 384])	 Training Loss: 1.0643863677978516
+Step: 68	 Data: torch.Size([10, 384])	 Training Loss: 1.2019946575164795
+Step: 69	 Data: torch.Size([10, 384])	 Training Loss: 1.2500114440917969
+Step: 70	 Data: torch.Size([10, 384])	 Training Loss: 0.986316442489624
+Step: 71	 Data: torch.Size([10, 384])	 Training Loss: 1.015045166015625
+Step: 72	 Data: torch.Size([10, 350])	 Training Loss: 1.4833375215530396
+Step: 73	 Data: torch.Size([10, 384])	 Training Loss: 1.0047998428344727
+Step: 74	 Data: torch.Size([10, 384])	 Training Loss: 1.1335455179214478
+Step: 75	 Data: torch.Size([10, 384])	 Training Loss: 1.068205714225769
+Step: 76	 Data: torch.Size([10, 384])	 Training Loss: 0.9431756138801575
+Step: 77	 Data: torch.Size([10, 384])	 Training Loss: 1.1962858438491821
+Step: 78	 Data: torch.Size([10, 384])	 Training Loss: 1.106613039970398
+Step: 79	 Data: torch.Size([10, 384])	 Training Loss: 1.3082538843154907
+Step: 80	 Data: torch.Size([10, 384])	 Training Loss: 1.1267509460449219
+Step: 81	 Data: torch.Size([10, 384])	 Training Loss: 1.128347396850586
+Step: 82	 Data: torch.Size([10, 384])	 Training Loss: 1.1348865032196045
+Step: 83	 Data: torch.Size([10, 384])	 Training Loss: 1.0930542945861816
+Step: 84	 Data: torch.Size([10, 384])	 Training Loss: 0.9549001455307007
+Step: 85	 Data: torch.Size([10, 384])	 Training Loss: 1.0699557065963745
+Step: 86	 Data: torch.Size([10, 384])	 Training Loss: 1.1740022897720337
+Step: 87	 Data: torch.Size([10, 384])	 Training Loss: 1.083775281906128
+Step: 88	 Data: torch.Size([10, 384])	 Training Loss: 0.9512909054756165
+Step: 89	 Data: torch.Size([10, 384])	 Training Loss: 1.148756742477417
+Step: 90	 Data: torch.Size([10, 384])	 Training Loss: 1.1486831903457642
+Step: 91	 Data: torch.Size([10, 384])	 Training Loss: 0.9869292974472046
+Step: 92	 Data: torch.Size([10, 384])	 Training Loss: 0.9608755111694336
+Step: 93	 Data: torch.Size([10, 384])	 Training Loss: 1.0756385326385498
+Step: 94	 Data: torch.Size([10, 384])	 Training Loss: 1.2118579149246216
+Step: 95	 Data: torch.Size([10, 384])	 Training Loss: 1.0697778463363647
+Step: 96	 Data: torch.Size([10, 384])	 Training Loss: 0.9737399816513062
+Step: 97	 Data: torch.Size([10, 384])	 Training Loss: 1.1344454288482666
+Step: 98	 Data: torch.Size([10, 384])	 Training Loss: 1.0104731321334839
+Step: 99	 Data: torch.Size([10, 384])	 Training Loss: 1.0708214044570923
+Step: 100	 Data: torch.Size([10, 384])	 Training Loss: 1.2439850568771362
+Step: 101	 Data: torch.Size([10, 384])	 Training Loss: 1.0457819700241089
+Step: 102	 Data: torch.Size([10, 384])	 Training Loss: 1.0836431980133057
+Step: 103	 Data: torch.Size([10, 384])	 Training Loss: 1.0963395833969116
+Step: 104	 Data: torch.Size([10, 384])	 Training Loss: 1.0274252891540527
+Step: 105	 Data: torch.Size([10, 384])	 Training Loss: 1.07094144821167
+Step: 106	 Data: torch.Size([10, 384])	 Training Loss: 1.2139780521392822
+Step: 107	 Data: torch.Size([10, 384])	 Training Loss: 1.027397632598877
+Step: 108	 Data: torch.Size([10, 384])	 Training Loss: 1.0396206378936768
+Step: 109	 Data: torch.Size([10, 384])	 Training Loss: 1.091244101524353
+Step: 110	 Data: torch.Size([10, 384])	 Training Loss: 1.008082628250122
+Step: 111	 Data: torch.Size([10, 384])	 Training Loss: 1.303768277168274
+Step: 112	 Data: torch.Size([10, 384])	 Training Loss: 1.3230526447296143
+Step: 113	 Data: torch.Size([10, 384])	 Training Loss: 1.184988021850586
+Step: 114	 Data: torch.Size([10, 384])	 Training Loss: 1.0646532773971558
+Step: 115	 Data: torch.Size([10, 384])	 Training Loss: 0.9951629042625427
+Step: 116	 Data: torch.Size([10, 384])	 Training Loss: 1.01032555103302
+Step: 117	 Data: torch.Size([10, 384])	 Training Loss: 0.9925331473350525
+Step: 118	 Data: torch.Size([10, 384])	 Training Loss: 1.0436360836029053
+Step: 119	 Data: torch.Size([10, 384])	 Training Loss: 1.461987018585205
+Step: 120	 Data: torch.Size([10, 384])	 Training Loss: 0.9712417125701904
+Step: 121	 Data: torch.Size([10, 307])	 Training Loss: 1.2099915742874146
+Step: 122	 Data: torch.Size([10, 384])	 Training Loss: 1.245181918144226
+Step: 123	 Data: torch.Size([10, 384])	 Training Loss: 1.0882444381713867
+Step: 124	 Data: torch.Size([10, 384])	 Training Loss: 1.0484377145767212
+Step: 125	 Data: torch.Size([10, 384])	 Training Loss: 0.977429211139679
+Step: 126	 Data: torch.Size([10, 384])	 Training Loss: 1.0457277297973633
+Step: 127	 Data: torch.Size([10, 384])	 Training Loss: 1.1700923442840576
+Step: 128	 Data: torch.Size([10, 384])	 Training Loss: 0.951673686504364
+Step: 129	 Data: torch.Size([10, 384])	 Training Loss: 1.1808024644851685
+Step: 130	 Data: torch.Size([10, 384])	 Training Loss: 1.089317798614502
+Step: 131	 Data: torch.Size([10, 384])	 Training Loss: 1.1019408702850342
+Step: 132	 Data: torch.Size([10, 384])	 Training Loss: 1.1079480648040771
+Step: 133	 Data: torch.Size([10, 384])	 Training Loss: 1.1080788373947144
+Step: 134	 Data: torch.Size([10, 384])	 Training Loss: 1.197737216949463
+Step: 135	 Data: torch.Size([10, 384])	 Training Loss: 1.1399173736572266
+Step: 136	 Data: torch.Size([10, 384])	 Training Loss: 1.0426470041275024
+Step: 137	 Data: torch.Size([10, 384])	 Training Loss: 1.2074837684631348
+Step: 138	 Data: torch.Size([10, 384])	 Training Loss: 1.0506986379623413
+Step: 139	 Data: torch.Size([10, 384])	 Training Loss: 1.1552906036376953
+Step: 140	 Data: torch.Size([10, 384])	 Training Loss: 1.0757694244384766
+Step: 141	 Data: torch.Size([10, 384])	 Training Loss: 1.0963846445083618
+Step: 142	 Data: torch.Size([10, 384])	 Training Loss: 1.0994532108306885
+Step: 143	 Data: torch.Size([10, 384])	 Training Loss: 1.1567412614822388
+Step: 144	 Data: torch.Size([10, 384])	 Training Loss: 1.1361876726150513
+Step: 145	 Data: torch.Size([10, 384])	 Training Loss: 1.116243839263916
+Step: 146	 Data: torch.Size([10, 384])	 Training Loss: 1.1200580596923828
+Step: 147	 Data: torch.Size([10, 384])	 Training Loss: 1.1663321256637573
+Step: 148	 Data: torch.Size([10, 384])	 Training Loss: 1.101778507232666
+Step: 149	 Data: torch.Size([10, 384])	 Training Loss: 1.0580905675888062
+Step: 150	 Data: torch.Size([10, 384])	 Training Loss: 1.0730507373809814
+Step: 151	 Data: torch.Size([10, 384])	 Training Loss: 1.2218981981277466
+Step: 152	 Data: torch.Size([10, 384])	 Training Loss: 1.0392212867736816
+Step: 153	 Data: torch.Size([10, 384])	 Training Loss: 1.2583483457565308
+Step: 154	 Data: torch.Size([10, 384])	 Training Loss: 1.160644292831421
+Step: 155	 Data: torch.Size([10, 384])	 Training Loss: 1.0613139867782593
+Step: 156	 Data: torch.Size([10, 384])	 Training Loss: 0.9675546288490295
+Step: 157	 Data: torch.Size([10, 384])	 Training Loss: 1.0234110355377197
+Step: 158	 Data: torch.Size([10, 384])	 Training Loss: 1.139562726020813
+Step: 159	 Data: torch.Size([10, 384])	 Training Loss: 1.2163970470428467
+Step: 160	 Data: torch.Size([10, 384])	 Training Loss: 1.0132339000701904
+Step: 161	 Data: torch.Size([10, 384])	 Training Loss: 1.1416512727737427
+Step: 162	 Data: torch.Size([10, 384])	 Training Loss: 1.202059030532837
+Step: 163	 Data: torch.Size([10, 384])	 Training Loss: 1.1432234048843384
+Step: 164	 Data: torch.Size([10, 384])	 Training Loss: 1.1203914880752563
+Step: 165	 Data: torch.Size([10, 384])	 Training Loss: 1.0382481813430786
+Step: 166	 Data: torch.Size([10, 384])	 Training Loss: 1.2543768882751465
+Step: 167	 Data: torch.Size([10, 384])	 Training Loss: 1.0560990571975708
+Step: 168	 Data: torch.Size([10, 384])	 Training Loss: 1.1262050867080688
+Step: 169	 Data: torch.Size([10, 384])	 Training Loss: 1.093614935874939
+Step: 170	 Data: torch.Size([10, 384])	 Training Loss: 1.2154608964920044
+Step: 171	 Data: torch.Size([10, 384])	 Training Loss: 1.0485764741897583
+Step: 172	 Data: torch.Size([10, 384])	 Training Loss: 0.9896160960197449
+Step: 173	 Data: torch.Size([10, 384])	 Training Loss: 1.062323808670044
+Step: 174	 Data: torch.Size([10, 384])	 Training Loss: 1.0269105434417725
+Step: 175	 Data: torch.Size([10, 384])	 Training Loss: 1.1623384952545166
+Step: 176	 Data: torch.Size([10, 384])	 Training Loss: 1.0892648696899414
+Step: 177	 Data: torch.Size([10, 384])	 Training Loss: 1.1498223543167114
+Step: 178	 Data: torch.Size([10, 384])	 Training Loss: 1.0514975786209106
+Step: 179	 Data: torch.Size([10, 384])	 Training Loss: 1.0404841899871826
+Step: 180	 Data: torch.Size([10, 384])	 Training Loss: 1.252539873123169
+Step: 181	 Data: torch.Size([10, 384])	 Training Loss: 0.8862357139587402
+Step: 182	 Data: torch.Size([10, 384])	 Training Loss: 1.2553094625473022
+Step: 183	 Data: torch.Size([10, 384])	 Training Loss: 1.0744439363479614
+Step: 184	 Data: torch.Size([10, 384])	 Training Loss: 1.1622368097305298
+Step: 185	 Data: torch.Size([10, 384])	 Training Loss: 1.0232417583465576
+Step: 186	 Data: torch.Size([10, 384])	 Training Loss: 1.141223430633545
+Step: 187	 Data: torch.Size([10, 384])	 Training Loss: 1.0040193796157837
+Step: 188	 Data: torch.Size([10, 384])	 Training Loss: 1.099012851715088
+Step: 189	 Data: torch.Size([10, 384])	 Training Loss: 1.0778253078460693
+Step: 190	 Data: torch.Size([10, 384])	 Training Loss: 1.2429343461990356
+Step: 191	 Data: torch.Size([10, 384])	 Training Loss: 1.0493359565734863
+Step: 192	 Data: torch.Size([10, 384])	 Training Loss: 1.1660590171813965
+Step: 193	 Data: torch.Size([10, 384])	 Training Loss: 1.0783499479293823
+Step: 194	 Data: torch.Size([10, 384])	 Training Loss: 1.082100510597229
+Step: 195	 Data: torch.Size([10, 384])	 Training Loss: 1.0940386056900024
+Step: 196	 Data: torch.Size([10, 384])	 Training Loss: 1.0589765310287476
+Step: 197	 Data: torch.Size([10, 384])	 Training Loss: 0.9647482633590698
+Step: 198	 Data: torch.Size([10, 384])	 Training Loss: 1.1759446859359741
+Step: 199	 Data: torch.Size([10, 384])	 Training Loss: 1.1973901987075806
+Step: 200	 Data: torch.Size([10, 384])	 Training Loss: 1.0809662342071533
+Step: 201	 Data: torch.Size([10, 384])	 Training Loss: 1.1187461614608765
+Step: 202	 Data: torch.Size([10, 384])	 Training Loss: 1.0570906400680542
+Step: 203	 Data: torch.Size([10, 384])	 Training Loss: 1.1911375522613525
+Step: 204	 Data: torch.Size([10, 384])	 Training Loss: 1.1185611486434937
+Step: 205	 Data: torch.Size([10, 384])	 Training Loss: 1.147875189781189
+Step: 206	 Data: torch.Size([10, 384])	 Training Loss: 1.052720546722412
+Step: 207	 Data: torch.Size([10, 384])	 Training Loss: 1.0408093929290771
+Step: 208	 Data: torch.Size([10, 384])	 Training Loss: 1.1146008968353271
+Step: 209	 Data: torch.Size([10, 384])	 Training Loss: 1.1059784889221191
+Step: 210	 Data: torch.Size([10, 384])	 Training Loss: 1.141126036643982
+Step: 211	 Data: torch.Size([10, 384])	 Training Loss: 1.0717698335647583
+Step: 212	 Data: torch.Size([10, 384])	 Training Loss: 1.0098177194595337
+Step: 213	 Data: torch.Size([10, 384])	 Training Loss: 1.0902659893035889
+Step: 214	 Data: torch.Size([10, 384])	 Training Loss: 1.227597713470459
+Step: 215	 Data: torch.Size([10, 384])	 Training Loss: 1.1000851392745972
+Step: 216	 Data: torch.Size([10, 384])	 Training Loss: 1.1002074480056763
+Step: 217	 Data: torch.Size([10, 384])	 Training Loss: 1.229477882385254
+Step: 218	 Data: torch.Size([10, 384])	 Training Loss: 1.1659674644470215
+Step: 219	 Data: torch.Size([10, 384])	 Training Loss: 1.1980425119400024
+Step: 220	 Data: torch.Size([10, 384])	 Training Loss: 1.0590684413909912
+Step: 221	 Data: torch.Size([10, 384])	 Training Loss: 1.1670128107070923
+Step: 222	 Data: torch.Size([10, 384])	 Training Loss: 1.0015361309051514
+Step: 223	 Data: torch.Size([10, 384])	 Training Loss: 1.0914366245269775
+Step: 224	 Data: torch.Size([10, 384])	 Training Loss: 1.0828126668930054
+Step: 225	 Data: torch.Size([10, 384])	 Training Loss: 0.9529895186424255
+Step: 226	 Data: torch.Size([10, 384])	 Training Loss: 0.9943554997444153
+Step: 227	 Data: torch.Size([10, 384])	 Training Loss: 1.1247612237930298
+Step: 228	 Data: torch.Size([10, 384])	 Training Loss: 1.0412867069244385
+Step: 229	 Data: torch.Size([10, 384])	 Training Loss: 1.0417088270187378
+Step: 230	 Data: torch.Size([10, 384])	 Training Loss: 1.026512861251831
+Step: 231	 Data: torch.Size([10, 384])	 Training Loss: 1.1168427467346191
+Step: 232	 Data: torch.Size([10, 384])	 Training Loss: 1.099799633026123
+Step: 233	 Data: torch.Size([10, 384])	 Training Loss: 1.1884865760803223
+Step: 234	 Data: torch.Size([10, 384])	 Training Loss: 0.9613088965415955
+Step: 235	 Data: torch.Size([10, 384])	 Training Loss: 0.9752885699272156
+Step: 236	 Data: torch.Size([10, 384])	 Training Loss: 1.1049913167953491
+Step: 237	 Data: torch.Size([10, 384])	 Training Loss: 1.1913275718688965
+Step: 238	 Data: torch.Size([10, 384])	 Training Loss: 1.1770968437194824
+Step: 239	 Data: torch.Size([10, 384])	 Training Loss: 1.0729631185531616
+Step: 240	 Data: torch.Size([10, 384])	 Training Loss: 1.1335715055465698
+Step: 241	 Data: torch.Size([10, 384])	 Training Loss: 1.2052167654037476
+Step: 242	 Data: torch.Size([10, 384])	 Training Loss: 1.0799305438995361
+Step: 243	 Data: torch.Size([10, 384])	 Training Loss: 1.2169067859649658
+Step: 244	 Data: torch.Size([10, 384])	 Training Loss: 1.1498479843139648
+Step: 245	 Data: torch.Size([10, 384])	 Training Loss: 1.1733840703964233
+Step: 246	 Data: torch.Size([10, 384])	 Training Loss: 1.1482274532318115
+Step: 247	 Data: torch.Size([10, 384])	 Training Loss: 1.0831040143966675
+Step: 248	 Data: torch.Size([10, 384])	 Training Loss: 0.9999098777770996
+Step: 249	 Data: torch.Size([10, 384])	 Training Loss: 1.0469876527786255
+Step: 250	 Data: torch.Size([10, 384])	 Training Loss: 1.206375002861023
+Step: 251	 Data: torch.Size([10, 384])	 Training Loss: 1.1724904775619507
+Step: 252	 Data: torch.Size([10, 384])	 Training Loss: 1.1630204916000366
+Step: 253	 Data: torch.Size([10, 384])	 Training Loss: 1.1205624341964722
+Step: 254	 Data: torch.Size([10, 384])	 Training Loss: 1.1026147603988647
+Step: 255	 Data: torch.Size([10, 384])	 Training Loss: 0.9892370700836182
+Step: 256	 Data: torch.Size([10, 384])	 Training Loss: 1.1136233806610107
+Step: 257	 Data: torch.Size([10, 384])	 Training Loss: 1.068242073059082
+Step: 258	 Data: torch.Size([10, 384])	 Training Loss: 1.0227199792861938
+Step: 259	 Data: torch.Size([10, 384])	 Training Loss: 0.9982060194015503
+Step: 260	 Data: torch.Size([10, 384])	 Training Loss: 1.1228575706481934
+Step: 261	 Data: torch.Size([10, 384])	 Training Loss: 1.1734113693237305
+Step: 262	 Data: torch.Size([10, 384])	 Training Loss: 1.1560786962509155
+Step: 263	 Data: torch.Size([10, 384])	 Training Loss: 1.206504225730896
+Step: 264	 Data: torch.Size([10, 384])	 Training Loss: 1.230736494064331
+Step: 265	 Data: torch.Size([10, 384])	 Training Loss: 1.0819834470748901
+Step: 266	 Data: torch.Size([10, 384])	 Training Loss: 1.0260348320007324
+Step: 267	 Data: torch.Size([10, 384])	 Training Loss: 1.0171420574188232
+Step: 268	 Data: torch.Size([10, 384])	 Training Loss: 1.0749406814575195
+Step: 269	 Data: torch.Size([10, 384])	 Training Loss: 1.038456678390503
+Step: 270	 Data: torch.Size([10, 384])	 Training Loss: 1.1561495065689087
+Step: 271	 Data: torch.Size([10, 384])	 Training Loss: 1.1226608753204346
+Step: 272	 Data: torch.Size([10, 384])	 Training Loss: 1.0622469186782837
+Step: 273	 Data: torch.Size([10, 384])	 Training Loss: 0.9571049213409424
+Step: 274	 Data: torch.Size([10, 384])	 Training Loss: 1.1341581344604492
+Step: 275	 Data: torch.Size([10, 384])	 Training Loss: 1.155113697052002
+Step: 276	 Data: torch.Size([10, 384])	 Training Loss: 1.0922473669052124
+Step: 277	 Data: torch.Size([10, 384])	 Training Loss: 1.069349765777588
+Step: 278	 Data: torch.Size([10, 384])	 Training Loss: 1.1662096977233887
+Step: 279	 Data: torch.Size([10, 384])	 Training Loss: 1.129509687423706
+Step: 280	 Data: torch.Size([10, 384])	 Training Loss: 1.1155967712402344
+Step: 281	 Data: torch.Size([10, 384])	 Training Loss: 1.1482739448547363
+Step: 282	 Data: torch.Size([10, 384])	 Training Loss: 1.1170907020568848
+Step: 283	 Data: torch.Size([10, 384])	 Training Loss: 1.2302751541137695
+Step: 284	 Data: torch.Size([10, 384])	 Training Loss: 1.444260597229004
+Step: 285	 Data: torch.Size([10, 384])	 Training Loss: 1.1041516065597534
+Step: 286	 Data: torch.Size([10, 384])	 Training Loss: 1.2723345756530762
+Step: 287	 Data: torch.Size([10, 384])	 Training Loss: 1.103968858718872
+Step: 288	 Data: torch.Size([10, 384])	 Training Loss: 0.9288789629936218
+Step: 289	 Data: torch.Size([10, 384])	 Training Loss: 1.0837653875350952
+Step: 290	 Data: torch.Size([10, 384])	 Training Loss: 1.1300007104873657
+Step: 291	 Data: torch.Size([10, 384])	 Training Loss: 1.1084684133529663
+Step: 292	 Data: torch.Size([10, 384])	 Training Loss: 1.2006970643997192
+Step: 293	 Data: torch.Size([10, 384])	 Training Loss: 1.0310978889465332
+Step: 294	 Data: torch.Size([10, 384])	 Training Loss: 1.0071078538894653
+Step: 295	 Data: torch.Size([10, 384])	 Training Loss: 1.151637315750122
+Step: 296	 Data: torch.Size([10, 384])	 Training Loss: 1.1147907972335815
+Step: 297	 Data: torch.Size([10, 384])	 Training Loss: 1.1277251243591309
+Step: 298	 Data: torch.Size([10, 384])	 Training Loss: 1.0909264087677002
+Step: 299	 Data: torch.Size([10, 384])	 Training Loss: 1.1494477987289429
+Step: 300	 Data: torch.Size([10, 384])	 Training Loss: 1.2186040878295898
